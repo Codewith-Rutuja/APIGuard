@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ finding.finding_key }}  APIGuard</title>
+
+    <style>
+        :root {
+            --bg: #0A0915;
+            --surface: #181628;
+            --surface-2: #211D32;
+            --border: rgba(167,139,250,.14);
+            --text: #F5F3FA;
+            --muted: #A09AAF;
+            --lavender: #A78BFA;
+            --orange: #FF6B35;
+            --emerald: #10B981;
+            --danger: #FF4D6D;
+            --warning: #F59E0B;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 80% 0%, rgba(167,139,250,.08), transparent 32%),
+                var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .brand-mark {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255,107,53,.45);
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            color: var(--orange);
+            font-weight: 800;
+            font-size: 12px;
+            box-shadow: 0 0 22px rgba(255,107,53,.08);
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .08em;
+        }
+
+        .back {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            padding: 9px 13px;
+            border-radius: 6px;
+        }
+
+        .back:hover {
+            color: var(--text);
+            border-color: rgba(167,139,250,.3);
+        }
+
+        .eyebrow {
+            color: var(--orange);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.15;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-top: 9px;
+            font-size: 13px;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.55fr .85fr;
+            gap: 18px;
+        }
+
+        .card {
+            background: rgba(24,22,40,.82);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .card-header {
+            padding: 14px 17px;
+            border-bottom: 1px solid var(--border);
+            color: #D8D3E5;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .card-body {
+            padding: 18px;
+        }
+
+        .finding-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 9px;
+            margin-bottom: 18px;
+        }
+
+        .pill {
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 6px 9px;
+            color: #C9C4D3;
+            font-size: 10px;
+            background: rgba(167,139,250,.035);
+        }
+
+        .severity {
+            font-weight: 800;
+            letter-spacing: .05em;
+        }
+
+        .severity.high {
+            color: var(--danger);
+        }
+
+        .severity.medium {
+            color: var(--warning);
+        }
+
+        .severity.low {
+            color: var(--emerald);
+        }
+
+        .endpoint {
+            font-family: "Courier New", monospace;
+            color: #E7E2F0;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .method {
+            color: var(--orange);
+            font-weight: 800;
+            margin-right: 8px;
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .section:first-child {
+            margin-top: 0;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 7px;
+        }
+
+        .value {
+            color: #DDD8E7;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .evidence {
+            background: #0D0B18;
+            border: 1px solid rgba(167,139,250,.1);
+            border-radius: 7px;
+            padding: 13px;
+            margin-top: 10px;
+        }
+
+        .evidence pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #D8D3E5;
+            font-family: "Courier New", monospace;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .expected {
+            border-left: 2px solid var(--emerald);
+        }
+
+        .observed {
+            border-left: 2px solid var(--orange);
+        }
+
+        .side-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 11px 0;
+            border-bottom: 1px solid rgba(167,139,250,.07);
+            font-size: 11px;
+        }
+
+        .side-row:last-child {
+            border-bottom: 0;
+        }
+
+        .side-label {
+            color: var(--muted);
+        }
+
+        .side-value {
+            color: #DDD8E7;
+            text-align: right;
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .shell {
+                padding: 22px 15px 40px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="shell">
+
+    <div class="topbar">
+        <div class="brand">
+            <div class="brand-mark">AG</div>
+            <div class="brand-name">APIGUARD</div>
+        </div>
+
+        <a class="back" href="/"> Assessment dashboard</a>
+    </div>
+
+
+    <div class="header">
+        <div class="eyebrow">Security Finding</div>
+
+        <h1>{{ finding.title }}</h1>
+
+        <div class="subtitle">
+            {{ finding.finding_key }}  {{ finding.target_name }}  {{ finding.environment }}
+        </div>
+    </div>
+
+
+    <div class="grid">
+
+        <main>
+
+            <div class="card">
+                <div class="card-header">Finding overview</div>
+
+                <div class="card-body">
+
+                    <div class="finding-meta">
+
+                        <span class="pill">
+                            ID: {{ finding.finding_key }}
+                        </span>
+
+                        <span class="pill severity
+                            {% if finding.severity == 'High' %}high
+                            {% elif finding.severity == 'Medium' %}medium
+                            {% else %}low{% endif %}">
+                            {{ finding.severity|upper }}
+                        </span>
+
+                        <span class="pill">
+                            {{ finding.owasp_category or "Unmapped" }}
+                        </span>
+
+                        {% if finding.cwe %}
+                        <span class="pill">
+                            {{ finding.cwe }}
+                        </span>
+                        {% endif %}
+
+                        <span class="pill">
+                            {{ finding.status }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Endpoint</div>
+
+                        <div class="endpoint">
+                            <span class="method">{{ finding.method or "" }}</span>
+                            {{ finding.path or "" }}
+                        </div>
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Description</div>
+                        <div class="value">
+                            {{ finding.description }}
+                        </div>
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Impact</div>
+                        <div class="value">
+                            {{ finding.impact }}
+                        </div>
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Remediation</div>
+                        <div class="value">
+                            {{ finding.remediation }}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-header">
+                    Assessment evidence
+                </div>
+
+                <div class="card-body">
+
+                    {% if evidence %}
+
+                    <div class="section">
+                        <div class="label">Test request</div>
+
+                        <div class="evidence">
+                            <pre>{{ evidence.request_data }}</pre>
+                        </div>
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Expected behavior</div>
+
+                        <div class="evidence expected">
+                            <pre>{{ evidence.expected_behavior }}</pre>
+                        </div>
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Observed behavior</div>
+
+                        <div class="evidence observed">
+                            <pre>{{ evidence.observed_behavior }}</pre>
+                        </div>
+                    </div>
+
+
+                    <div class="section">
+                        <div class="label">Captured response evidence</div>
+
+                        <div class="evidence">
+                            <pre>{{ evidence.response_data }}</pre>
+                        </div>
+                    </div>
+
+                    {% else %}
+
+                    <div class="value">
+                        No evidence record is available for this finding.
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <aside>
+
+            <div class="card">
+
+                <div class="card-header">
+                    Assessment context
+                </div>
+
+                <div class="card-body">
+
+                    <div class="side-row">
+                        <span class="side-label">Target</span>
+                        <span class="side-value">{{ finding.target_name }}</span>
+                    </div>
+
+                    <div class="side-row">
+                        <span class="side-label">Environment</span>
+                        <span class="side-value">{{ finding.environment }}</span>
+                    </div>
+
+                    <div class="side-row">
+                        <span class="side-label">Method</span>
+                        <span class="side-value">{{ finding.method }}</span>
+                    </div>
+
+                    <div class="side-row">
+                        <span class="side-label">OWASP</span>
+                        <span class="side-value">{{ finding.owasp_category }}</span>
+                    </div>
+
+                    {% if finding.cwe %}
+                    <div class="side-row">
+                        <span class="side-label">CWE</span>
+                        <span class="side-value">{{ finding.cwe }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="side-row">
+                        <span class="side-label">Recorded</span>
+                        <span class="side-value">{{ finding.created_at }}</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+
+</body>
+</html>

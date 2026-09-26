@@ -1,0 +1,2104 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>APIGuard  Security Overview</title>
+
+    <style>
+        :root {
+            --bg: #f7f8fa;
+            --surface: #ffffff;
+            --surface-2: #fbfcfd;
+            --border: #e3e7ec;
+            --border-dark: #d5dae1;
+
+            --text: #20252d;
+            --muted: #737b87;
+            --muted-2: #9299a3;
+
+            --nav: #171b21;
+            --nav-text: #aeb5bf;
+            --nav-active: #ffffff;
+
+            --blue: #315fca;
+            --blue-soft: #eef3fc;
+
+            --red: #c83f43;
+            --red-soft: #fdf0f1;
+
+            --orange: #b76b16;
+            --orange-soft: #fff6e9;
+
+            --green: #217a58;
+            --green-soft: #edf8f3;
+
+            --shadow: 0 1px 2px rgba(16, 24, 40, .04);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+            font-size: 13px;
+        }
+
+        /* --------------------------------------------------
+           APP SHELL
+        -------------------------------------------------- */
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 224px;
+            background: var(--nav);
+            color: white;
+            position: fixed;
+            inset: 0 auto 0 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            height: 66px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #292e35;
+        }
+
+        .brand-mark {
+            width: 27px;
+            height: 27px;
+            border: 1px solid #53606f;
+            border-radius: 5px;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 12px;
+            margin-right: 9px;
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 650;
+            letter-spacing: -.1px;
+        }
+
+        .brand-sub {
+            display: block;
+            color: #747e8b;
+            font-size: 8px;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .workspace {
+            padding: 18px 12px 0;
+        }
+
+        .workspace-label {
+            color: #68727e;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 9px 8px;
+        }
+
+        .nav-item {
+            height: 35px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            margin-bottom: 2px;
+            border-radius: 5px;
+            color: var(--nav-text);
+            font-size: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--nav-active);
+            background: #282e36;
+        }
+
+        .nav-icon {
+            width: 22px;
+            color: #7f8995;
+            font-size: 12px;
+        }
+
+        .nav-item.active .nav-icon {
+            color: #dbe2ea;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 14px;
+            border-top: 1px solid #292e35;
+        }
+
+        .lab {
+            padding: 10px;
+            border: 1px solid #30363e;
+            border-radius: 5px;
+        }
+
+        .lab-label {
+            color: #68727e;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .lab-value {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            color: #c4cbd4;
+            font-size: 10px;
+        }
+
+        .lab-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #35a978;
+        }
+
+        /* --------------------------------------------------
+           MAIN
+        -------------------------------------------------- */
+
+        .main {
+            margin-left: 224px;
+            width: calc(100% - 224px);
+        }
+
+        .topbar {
+            height: 66px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .crumbs {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .crumbs strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .system-status {
+            color: var(--green);
+            font-size: 10px;
+        }
+
+        .system-status::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            margin-right: 6px;
+        }
+
+        .run-button {
+            border: 1px solid #315fca;
+            background: #315fca;
+            color: white;
+            border-radius: 4px;
+            padding: 8px 13px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .content {
+            max-width: 1500px;
+            padding: 27px 30px 45px;
+        }
+
+        .page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+        }
+
+        .page-title h1 {
+            margin: 0;
+            font-size: 21px;
+            font-weight: 650;
+            letter-spacing: -.35px;
+        }
+
+        .page-title p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .target {
+            border-left: 3px solid var(--blue);
+            padding-left: 10px;
+        }
+
+        .target-label {
+            color: var(--muted-2);
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .target-name {
+            margin-top: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* --------------------------------------------------
+           SUMMARY
+        -------------------------------------------------- */
+
+        .summary {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            min-height: 86px;
+            padding: 17px 20px;
+            border-right: 1px solid var(--border);
+        }
+
+        .summary-item:last-child {
+            border-right: 0;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 10px;
+            margin-bottom: 10px;
+        }
+
+        .summary-value {
+            font-size: 23px;
+            line-height: 1;
+            font-weight: 650;
+        }
+
+        .summary-meta {
+            color: var(--muted-2);
+            font-size: 9px;
+            margin-top: 6px;
+        }
+
+        .summary-value.high {
+            color: var(--red);
+        }
+
+        .summary-value.medium {
+            color: var(--orange);
+        }
+
+        /* --------------------------------------------------
+           GRID
+        -------------------------------------------------- */
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) minmax(300px, .8fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .panel-header {
+            min-height: 58px;
+            padding: 14px 17px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .panel-subtitle {
+            color: var(--muted);
+            font-size: 9px;
+            margin-top: 3px;
+        }
+
+        .panel-action {
+            color: var(--blue);
+            font-size: 10px;
+        }
+
+        /* --------------------------------------------------
+           FINDINGS
+        -------------------------------------------------- */
+
+        .findings-toolbar {
+            padding: 10px 17px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-count {
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        .filter {
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 5px 8px;
+            color: var(--muted);
+            background: white;
+            font-size: 9px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 9px 15px;
+            background: var(--surface-2);
+            color: var(--muted-2);
+            border-bottom: 1px solid var(--border);
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 11px 15px;
+            border-bottom: 1px solid #edf0f3;
+            font-size: 10px;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .finding-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .finding-link:hover .finding-name {
+            color: var(--orange);
+        }
+
+        .finding-id {
+            color: var(--blue);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 8px;
+            margin-bottom: 3px;
+        }
+
+        .finding-name {
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .endpoint {
+            color: #596574;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 8px;
+        }
+
+        .method {
+            color: var(--muted);
+            margin-right: 5px;
+        }
+
+        .severity {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .severity.high {
+            color: var(--red);
+            background: var(--red-soft);
+        }
+
+        .severity.medium {
+            color: var(--orange);
+            background: var(--orange-soft);
+        }
+
+        .severity.low {
+            color: var(--blue);
+            background: var(--blue-soft);
+        }
+
+        .status {
+            color: var(--red);
+            font-size: 9px;
+        }
+
+        /* --------------------------------------------------
+           INVENTORY
+        -------------------------------------------------- */
+
+        .inventory {
+            padding-bottom: 5px;
+        }
+
+        .inventory-row {
+            min-height: 45px;
+            padding: 8px 16px;
+            border-bottom: 1px solid #edf0f3;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .inventory-row:last-child {
+            border-bottom: 0;
+        }
+
+        .inventory-left {
+            min-width: 0;
+        }
+
+        .inventory-path {
+            color: #394453;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 9px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .inventory-source {
+            color: var(--muted-2);
+            font-size: 8px;
+            margin-top: 3px;
+        }
+
+        .method-badge {
+            color: #536070;
+            background: #f1f3f5;
+            border: 1px solid #e1e5e9;
+            padding: 3px 5px;
+            border-radius: 3px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 8px;
+        }
+
+        /* --------------------------------------------------
+           ASSESSMENTS
+        -------------------------------------------------- */
+
+        .assessment {
+            padding: 12px 16px;
+            border-bottom: 1px solid #edf0f3;
+        }
+
+        .assessment:last-child {
+            border-bottom: 0;
+        }
+
+        .assessment-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scan-id {
+            color: var(--blue);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 9px;
+        }
+
+        .scan-status {
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .scan-status.completed {
+            color: var(--green);
+        }
+
+        .scan-status.failed {
+            color: var(--red);
+        }
+
+        .assessment-name {
+            margin-top: 5px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .assessment-meta {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 8px;
+        }
+
+        /* --------------------------------------------------
+           RESPONSIVE
+        -------------------------------------------------- */
+
+        @media (max-width: 1050px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .brand {
+                padding: 0;
+                justify-content: center;
+            }
+
+            .brand-name,
+            .brand-sub,
+            .workspace-label,
+            .nav-item span,
+            .lab {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+            }
+
+            .main {
+                margin-left: 60px;
+                width: calc(100% - 60px);
+            }
+
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .summary-item:nth-child(2) {
+                border-right: 0;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-item {
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .system-status {
+                display: none;
+            }
+
+            th:nth-child(3),
+            td:nth-child(3) {
+                display: none;
+            }
+        }
+    
+
+
+
+/* =========================================================
+   APIGUARD  OBSIDIAN / VIOLET / TACTICAL ORANGE
+   ========================================================= */
+
+:root {
+    --bg: #0A0915;
+    --surface: #181628;
+    --surface-2: #211D35;
+    --surface-3: #28223F;
+
+    --orange: #FF6B35;
+    --orange-dark: #E65F2B;
+    --orange-soft: rgba(255,107,53,.11);
+    --orange-glow: rgba(255,107,53,.22);
+
+    --emerald: #10B981;
+    --emerald-dark: #059669;
+    --emerald-soft: rgba(16,185,129,.10);
+    --emerald-glow: rgba(16,185,129,.20);
+
+    --lavender: #A78BFA;
+    --lavender-soft: rgba(167,139,250,.10);
+
+    --slate: #94A3B8;
+
+    --text: #F5F3FA;
+    --text-secondary: #D8D3E5;
+    --muted: #A09AAF;
+    --muted-dark: #716B82;
+
+    --border: rgba(167,139,250,.12);
+    --border-strong: rgba(167,139,250,.22);
+
+    --danger: #FF4D6D;
+    --danger-soft: rgba(255,77,109,.10);
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+html,
+body {
+    background: var(--bg);
+}
+
+body {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+
+    background:
+        radial-gradient(
+            circle at 82% -10%,
+            rgba(167,139,250,.075),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 8% 70%,
+            rgba(255,107,53,.035),
+            transparent 28%
+        ),
+        var(--bg);
+}
+
+/* subtle technical grid */
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+
+    background-image:
+        linear-gradient(
+            rgba(167,139,250,.018) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(167,139,250,.018) 1px,
+            transparent 1px
+        );
+
+    background-size: 44px 44px;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,.65),
+            transparent 88%
+        );
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+    background:
+        linear-gradient(
+            180deg,
+            #181628 0%,
+            #141222 100%
+        );
+
+    border-right: 1px solid var(--border);
+}
+
+.brand {
+    border-bottom-color: var(--border);
+}
+
+.brand-mark {
+    background:
+        linear-gradient(
+            135deg,
+            var(--orange),
+            var(--orange-dark)
+        );
+
+    color: #170D08;
+
+    border: 1px solid rgba(255,177,151,.35);
+
+    box-shadow:
+        0 0 18px rgba(255,107,53,.12);
+
+    animation: brandGlow 4s ease-in-out infinite;
+}
+
+.brand-name {
+    color: var(--text);
+    font-size: 15px;
+}
+
+.brand-sub {
+    color: var(--muted);
+}
+
+.nav-label {
+    color: #777089;
+}
+
+.nav-item {
+    color: #9B94AA;
+    transition:
+        color .18s ease,
+        background .18s ease,
+        transform .18s ease;
+}
+
+.nav-item:hover {
+    color: #EEEAF7;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(167,139,250,.08),
+            transparent
+        );
+
+    transform: translateX(3px);
+}
+
+.nav-item.active {
+    color: #FFF0E9;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,107,53,.13),
+            rgba(255,107,53,.025)
+        );
+
+    box-shadow:
+        inset 2px 0 0 var(--orange);
+}
+
+.nav-item.active .nav-symbol {
+    color: var(--orange);
+}
+
+/* environment */
+
+.env {
+    background: rgba(16,185,129,.025);
+    border-color: rgba(16,185,129,.13);
+}
+
+.env-label {
+    color: #746F80;
+}
+
+.env-value {
+    color: #C7C1D4;
+}
+
+.env-dot {
+    background: var(--emerald);
+
+    box-shadow:
+        0 0 8px rgba(16,185,129,.75),
+        0 0 18px rgba(16,185,129,.20);
+
+    animation: statusPulse 2.8s ease-in-out infinite;
+}
+
+/* =========================================================
+   TOPBAR
+   ========================================================= */
+
+.topbar {
+    background: rgba(10,9,21,.88);
+    backdrop-filter: blur(15px);
+
+    border-bottom-color: var(--border);
+}
+
+.crumb {
+    color: #81798F;
+    font-size: 11px;
+}
+
+.crumb strong {
+    color: #D5CFDF;
+}
+
+.ready {
+    color: var(--emerald);
+}
+
+.ready:before {
+    background: var(--emerald);
+    box-shadow: 0 0 8px var(--emerald);
+}
+
+.assess-btn {
+    background:
+        linear-gradient(
+            135deg,
+            var(--orange),
+            var(--orange-dark)
+        );
+
+    color: #FFF8F5;
+
+    border: 1px solid rgba(255,178,151,.25);
+
+    font-weight: 700;
+
+    box-shadow:
+        0 6px 22px rgba(255,107,53,.16),
+        inset 0 1px 0 rgba(255,255,255,.15);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        filter .18s ease;
+}
+
+.assess-btn:hover {
+    transform: translateY(-2px);
+
+    filter: brightness(1.06);
+
+    box-shadow:
+        0 9px 28px rgba(255,107,53,.25),
+        0 0 20px rgba(255,107,53,.08);
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.heading h1 {
+    color: #F7F4FC;
+    font-size: 26px;
+    letter-spacing: -.7px;
+}
+
+.heading p {
+    color: #958EA4;
+    font-size: 12px;
+}
+
+.target {
+    border-left-color: var(--orange);
+    background: rgba(255,107,53,.035);
+}
+
+.target small {
+    color: #7D758A;
+}
+
+.target strong {
+    color: #DDD8E7;
+}
+
+/* =========================================================
+   EXPOSURE / POSTURE
+   ========================================================= */
+
+.exposure {
+    background:
+        linear-gradient(
+            135deg,
+            #181628,
+            #201B32
+        );
+
+    border-color: rgba(167,139,250,.15);
+
+    box-shadow:
+        0 18px 45px rgba(0,0,0,.25),
+        inset 0 1px 0 rgba(255,255,255,.025);
+
+    overflow: hidden;
+}
+
+.exposure::before {
+    content: "";
+    position: absolute;
+
+    left: -25%;
+    top: 0;
+
+    width: 24%;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--orange),
+            transparent
+        );
+
+    box-shadow:
+        0 0 12px var(--orange);
+
+    animation: tacticalScan 5s linear infinite;
+}
+
+.exposure-intro {
+    border-right-color: var(--border);
+}
+
+.exposure-label {
+    color: #827B91;
+    font-size: 9px;
+}
+
+.exposure-title {
+    color: #F0ECF7;
+    font-size: 16px;
+}
+
+.exposure-sub {
+    color: #948DA2;
+    font-size: 10px;
+}
+
+.exposure-item {
+    border-right-color: var(--border);
+
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+.exposure-item:hover {
+    background: rgba(167,139,250,.035);
+    transform: translateY(-1px);
+}
+
+.exposure-number {
+    color: #F3F0F8;
+    font-size: 26px;
+}
+
+.exposure-number.red {
+    color: var(--danger);
+    text-shadow:
+        0 0 18px rgba(255,77,109,.16);
+}
+
+.exposure-number.amber {
+    color: var(--orange);
+    text-shadow:
+        0 0 18px rgba(255,107,53,.17);
+}
+
+.exposure-number.green {
+    color: var(--emerald);
+    text-shadow:
+        0 0 18px rgba(16,185,129,.17);
+}
+
+.exposure-caption {
+    color: #817A90;
+    font-size: 9px;
+}
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+
+.panel {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(24,22,40,.98),
+            rgba(20,18,34,.98)
+        );
+
+    border-color: var(--border);
+
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.22);
+
+    transition:
+        border-color .22s ease,
+        transform .22s ease,
+        box-shadow .22s ease;
+}
+
+.panel:hover {
+    border-color: rgba(167,139,250,.20);
+
+    box-shadow:
+        0 18px 44px rgba(0,0,0,.28),
+        0 0 18px rgba(167,139,250,.025);
+
+    transform: translateY(-1px);
+}
+
+.panel-head {
+    border-bottom-color: var(--border);
+}
+
+.panel-title {
+    color: #ECE8F4;
+    font-size: 12px;
+}
+
+.panel-sub {
+    color: #8C859B;
+    font-size: 9px;
+}
+
+.panel-link {
+    color: var(--lavender);
+}
+
+/* =========================================================
+   ATTACK SURFACE
+   ========================================================= */
+
+.surface-body {
+    background:
+        linear-gradient(
+            rgba(167,139,250,.018) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(167,139,250,.018) 1px,
+            transparent 1px
+        ),
+        #12101E;
+
+    background-size: 34px 34px;
+}
+
+.surface-root {
+    background:
+        linear-gradient(
+            145deg,
+            #211D35,
+            #19172A
+        );
+
+    border-color: rgba(167,139,250,.21);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025),
+        0 10px 25px rgba(0,0,0,.20);
+}
+
+.surface-root-label {
+    color: #817A91;
+}
+
+.surface-root-name {
+    color: #F0EDF7;
+}
+
+.surface-root-version {
+    color: var(--lavender);
+}
+
+.endpoint-node {
+    background:
+        linear-gradient(
+            145deg,
+            #201D31,
+            #19172A
+        );
+
+    border-color: rgba(167,139,250,.095);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.022);
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.endpoint-node:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(255,107,53,.27);
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.27),
+        0 0 17px rgba(255,107,53,.035);
+}
+
+.endpoint-node::before {
+    background: var(--emerald);
+
+    box-shadow:
+        0 0 8px rgba(16,185,129,.65);
+
+    animation: nodePulse 2.8s ease-in-out infinite;
+}
+
+.endpoint-node.risk {
+    border-left: 3px solid var(--danger);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,77,109,.09),
+            #1A1829
+        );
+}
+
+.endpoint-node.risk::before {
+    background: var(--danger);
+
+    box-shadow:
+        0 0 8px rgba(255,77,109,.75),
+        0 0 17px rgba(255,77,109,.20);
+}
+
+.endpoint-node.warning {
+    border-left: 3px solid var(--orange);
+}
+
+.endpoint-node.warning::before {
+    background: var(--orange);
+    box-shadow: 0 0 8px rgba(255,107,53,.70);
+}
+
+.endpoint-method {
+    color: #827B91;
+    font-size: 8px;
+}
+
+.endpoint-path {
+    color: #E0DCE9;
+    font-size: 10px;
+}
+
+.endpoint-meta {
+    color: #7D768B;
+    font-size: 8px;
+}
+
+.endpoint-risk {
+    color: var(--danger);
+}
+
+/* =========================================================
+   FINDINGS
+   ========================================================= */
+
+.findings-toolbar {
+    background: rgba(10,9,21,.28);
+    border-bottom-color: var(--border);
+}
+
+.result-count {
+    color: #91899F;
+}
+
+.filter {
+    background: rgba(167,139,250,.035);
+    border-color: var(--border);
+    color: #9D96AB;
+}
+
+th {
+    background: rgba(10,9,21,.40);
+    color: #80798E;
+    border-bottom-color: var(--border);
+    font-size: 8px;
+}
+
+td {
+    color: #C9C4D3;
+    border-bottom-color: rgba(167,139,250,.055);
+}
+
+tbody tr {
+    transition:
+        background .16s ease,
+        transform .16s ease;
+}
+
+tbody tr:hover {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,107,53,.045),
+            transparent
+        );
+
+    transform: translateX(2px);
+}
+
+.finding-id {
+    color: var(--orange);
+}
+
+.finding-name {
+    color: #ECE8F3;
+    font-size: 10.5px;
+}
+
+.finding-endpoint {
+    color: #8E879C;
+    font-size: 8px;
+}
+
+.sev-high {
+    color: #FF7890;
+
+    background: var(--danger-soft);
+
+    border: 1px solid rgba(255,77,109,.21);
+}
+
+.sev-medium {
+    color: #FF9A73;
+
+    background: var(--orange-soft);
+
+    border: 1px solid rgba(255,107,53,.18);
+}
+
+.sev-low {
+    color: #B4A7D8;
+
+    background: var(--lavender-soft);
+
+    border: 1px solid rgba(167,139,250,.13);
+}
+
+.open {
+    color: var(--danger);
+}
+
+/* =========================================================
+   OWASP
+   ========================================================= */
+
+.owasp-row {
+    border-bottom-color: rgba(167,139,250,.055);
+}
+
+.owasp-row:hover {
+    background: rgba(167,139,250,.025);
+}
+
+.owasp-name {
+    color: #D7D2E2;
+}
+
+.owasp-count {
+    color: #8C859A;
+}
+
+.owasp-code {
+    color: var(--lavender);
+}
+
+.owasp-progress {
+    background: #302B40;
+}
+
+.owasp-progress > div {
+    background:
+        linear-gradient(
+            90deg,
+            #7658D8,
+            var(--lavender)
+        );
+
+    box-shadow:
+        0 0 8px rgba(167,139,250,.16);
+}
+
+/* =========================================================
+   SCAN ACTIVITY
+   ========================================================= */
+
+.assessment {
+    border-bottom-color: rgba(167,139,250,.055);
+
+    transition:
+        background .18s ease,
+        padding-left .18s ease;
+}
+
+.assessment:hover {
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,107,53,.04),
+            transparent
+        );
+
+    padding-left: 20px;
+}
+
+.scan-id {
+    color: var(--orange);
+}
+
+.scan-name {
+    color: #DDD8E7;
+}
+
+.scan-meta {
+    color: #7F788E;
+}
+
+.completed {
+    color: var(--emerald);
+
+    text-shadow:
+        0 0 8px rgba(16,185,129,.18);
+}
+
+.failed {
+    color: var(--danger);
+}
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes brandGlow {
+    0%,100% {
+        box-shadow:
+            0 0 12px rgba(255,107,53,.07);
+    }
+
+    50% {
+        box-shadow:
+            0 0 23px rgba(255,107,53,.18);
+    }
+}
+
+@keyframes statusPulse {
+    0%,100% {
+        opacity: .65;
+        transform: scale(.86);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes nodePulse {
+    0%,100% {
+        opacity: .55;
+        transform: scale(.86);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes tacticalScan {
+    0% {
+        left: -25%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    65% {
+        opacity: 1;
+    }
+
+    100% {
+        left: 125%;
+        opacity: 0;
+    }
+}
+
+/* page entrance */
+
+.content {
+    animation:
+        apiguardEnter .5s cubic-bezier(.22,.61,.36,1) both;
+}
+
+.exposure {
+    animation:
+        apiguardEnter .5s .05s cubic-bezier(.22,.61,.36,1) both;
+}
+
+@keyframes apiguardEnter {
+    from {
+        opacity: 0;
+        transform: translateY(9px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-mark">A</div>
+
+            <div>
+                <div class="brand-name">APIGuard</div>
+                <span class="brand-sub">API SECURITY PLATFORM</span>
+            </div>
+        </div>
+
+        <div class="workspace">
+
+            <div class="workspace-label">
+                Workspace
+            </div>
+
+            <div class="nav-item active">
+                <div class="nav-icon"></div>
+                <span>Security overview</span>
+            </div>
+
+            <div class="nav-item">
+                <div class="nav-icon"></div>
+                <span>API inventory</span>
+            </div>
+
+            <div class="nav-item">
+                <div class="nav-icon"></div>
+                <span>Findings</span>
+            </div>
+
+            <div class="nav-item">
+                <div class="nav-icon"></div>
+                <span>Assessments</span>
+            </div>
+
+            <div class="workspace-label" style="margin-top:18px;">
+                Analysis
+            </div>
+
+            <div class="nav-item">
+                <div class="nav-icon"></div>
+                <span>OWASP coverage</span>
+            </div>
+
+            <div class="nav-item">
+                <div class="nav-icon"></div>
+                <span>Reports</span>
+            </div>
+
+            <div class="nav-item">
+                <div class="nav-icon"></div>
+                <span>Configuration</span>
+            </div>
+
+        </div>
+
+        <div class="sidebar-footer">
+
+            <div class="lab">
+                <div class="lab-label">
+                    Target environment
+                </div>
+
+                <div class="lab-value">
+                    <span class="lab-dot"></span>
+                    Controlled lab
+                </div>
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="crumbs">
+                Projects / <strong>AcmeCloud API</strong>
+                / Security overview
+            </div>
+
+            <div class="top-right">
+
+                <div class="system-status">
+                    Scanner ready
+                </div>
+
+                <button class="run-button">
+                    Run assessment
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <div class="content">
+
+            <div class="page-title">
+
+                <div>
+                    <h1>Security overview</h1>
+
+                    <p>
+                        API security posture and recent assessment activity.
+                    </p>
+                </div>
+
+                <div class="target">
+
+                    <div class="target-label">
+                        Active target
+                    </div>
+
+                    <div class="target-name">
+                        AcmeCloud API  v1
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SUMMARY -->
+
+            <section class="summary">
+
+                <div class="summary-item">
+
+                    <div class="summary-label">
+                        Total findings
+                    </div>
+
+                    <div class="summary-value">
+                        {{ summary.total or 0 }}
+                    </div>
+
+                    <div class="summary-meta">
+                        Recorded across assessments
+                    </div>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <div class="summary-label">
+                        High severity
+                    </div>
+
+                    <div class="summary-value high">
+                        {{ summary.high or 0 }}
+                    </div>
+
+                    <div class="summary-meta">
+                        Requires investigation
+                    </div>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <div class="summary-label">
+                        Medium severity
+                    </div>
+
+                    <div class="summary-value medium">
+                        {{ summary.medium or 0 }}
+                    </div>
+
+                    <div class="summary-meta">
+                        Review and remediate
+                    </div>
+
+                </div>
+
+
+                <div class="summary-item">
+
+                    <div class="summary-label">
+                        Recent assessments
+                    </div>
+
+                    <div class="summary-value">
+                        {{ scans|length }}
+                    </div>
+
+                    <div class="summary-meta">
+                        Latest executions
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- MAIN GRID -->
+
+            <section class="grid">
+
+
+                <!-- FINDINGS -->
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <div>
+                            <div class="panel-title">
+                                Open security findings
+                            </div>
+
+                            <div class="panel-subtitle">
+                                Findings requiring analyst review
+                            </div>
+                        </div>
+
+                        <div class="panel-action">
+                            View all
+                        </div>
+
+                    </div>
+
+
+                    <div class="findings-toolbar">
+
+                        <div class="result-count">
+                            Latest {{ findings|length }} findings
+                        </div>
+
+                        <div class="filter">
+                            All severities
+                        </div>
+
+                    </div>
+
+
+                    {% if findings %}
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Finding</th>
+                                <th>Severity</th>
+                                <th>OWASP</th>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for finding in findings[:12] %}
+
+                            <tr>
+
+                                <td>
+
+                                    <a
+                                        href="/findings/{{ finding.id }}"
+                                        class="finding-link"
+                                    >
+                                        <div class="finding-id">
+                                            {{ finding.finding_key }}
+                                        </div>
+
+                                        <div class="finding-name">
+                                            {{ finding.title }}
+                                        </div>
+                                    </a>
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if finding.severity == "High" %}
+
+                                        <span class="severity high">
+                                            HIGH
+                                        </span>
+
+                                    {% elif finding.severity == "Medium" %}
+
+                                        <span class="severity medium">
+                                            MEDIUM
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="severity low">
+                                            {{ finding.severity|upper }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ finding.owasp_category or "" }}
+                                </td>
+
+
+                                <td>
+
+                                    <div class="endpoint">
+
+                                        <span class="method">
+                                            {{ finding.method or "" }}
+                                        </span>
+
+                                        {{ finding.path or "" }}
+
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="status">
+                                        {{ finding.status }}
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                    {% else %}
+
+                    <div style="padding:30px;color:#737b87;">
+                        No findings recorded.
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- RIGHT -->
+
+                <div>
+
+
+                    <!-- API INVENTORY -->
+
+                    <div class="panel" style="margin-bottom:20px;">
+
+                        <div class="panel-header">
+
+                            <div>
+                                <div class="panel-title">
+                                    API inventory
+                                </div>
+
+                                <div class="panel-subtitle">
+                                    Recently observed endpoints
+                                </div>
+                            </div>
+
+                            <div class="panel-action">
+                                Inventory
+                            </div>
+
+                        </div>
+
+
+                        <div class="inventory">
+
+                            <div class="inventory-row">
+
+                                <div class="inventory-left">
+                                    <div class="inventory-path">
+                                        /api/v1/auth/login
+                                    </div>
+
+                                    <div class="inventory-source">
+                                        OpenAPI
+                                    </div>
+                                </div>
+
+                                <span class="method-badge">
+                                    POST
+                                </span>
+
+                            </div>
+
+
+                            <div class="inventory-row">
+
+                                <div class="inventory-left">
+                                    <div class="inventory-path">
+                                        /api/v1/profile
+                                    </div>
+
+                                    <div class="inventory-source">
+                                        OpenAPI
+                                    </div>
+                                </div>
+
+                                <span class="method-badge">
+                                    GET
+                                </span>
+
+                            </div>
+
+
+                            <div class="inventory-row">
+
+                                <div class="inventory-left">
+                                    <div class="inventory-path">
+                                        /api/v1/orders
+                                    </div>
+
+                                    <div class="inventory-source">
+                                        OpenAPI
+                                    </div>
+                                </div>
+
+                                <span class="method-badge">
+                                    GET
+                                </span>
+
+                            </div>
+
+
+                            <div class="inventory-row">
+
+                                <div class="inventory-left">
+                                    <div class="inventory-path">
+                                        /api/v1/orders/{order_id}
+                                    </div>
+
+                                    <div class="inventory-source">
+                                        OpenAPI
+                                    </div>
+                                </div>
+
+                                <span class="method-badge">
+                                    GET
+                                </span>
+
+                            </div>
+
+
+                            <div class="inventory-row">
+
+                                <div class="inventory-left">
+                                    <div class="inventory-path">
+                                        /api/v1/internal/debug
+                                    </div>
+
+                                    <div class="inventory-source">
+                                        Undocumented
+                                    </div>
+                                </div>
+
+                                <span class="method-badge">
+                                    GET
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ASSESSMENTS -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <div>
+                                <div class="panel-title">
+                                    Assessment activity
+                                </div>
+
+                                <div class="panel-subtitle">
+                                    Recent scanner executions
+                                </div>
+                            </div>
+
+                            <div class="panel-action">
+                                History
+                            </div>
+
+                        </div>
+
+
+                        {% if scans %}
+
+                            {% for scan in scans[:5] %}
+
+                            <div class="assessment">
+
+                                <div class="assessment-top">
+
+                                    <span class="scan-id">
+                                        SCAN #{{ scan.id }}
+                                    </span>
+
+                                    <span class="scan-status {{ scan.status }}">
+                                        {{ scan.status|upper }}
+                                    </span>
+
+                                </div>
+
+                                <div class="assessment-name">
+                                    {{ scan.target_name }}
+                                </div>
+
+                                <div class="assessment-meta">
+                                    {{ scan.environment }}
+                                     {{ scan.scanner_version }}
+                                </div>
+
+                                <div class="assessment-meta">
+                                    {{ scan.started_at }}
+                                </div>
+
+                            </div>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <div style="padding:25px;color:#737b87;">
+                                No assessment history.
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>
