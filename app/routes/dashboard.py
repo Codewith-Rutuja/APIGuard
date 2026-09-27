@@ -1,6 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect
 
 from ..database import get_apiguard_connection
+from ..scanner.config import ScanTarget
+from ..scanner.runner import run_security_scan
 
 
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -184,3 +186,120 @@ def finding_detail(finding_id):
         finding=finding,
         evidence=evidence,
     )
+
+
+@dashboard_bp.get("/findings")
+def findings_page():
+    connection = get_apiguard_connection()
+    try:
+        findings = connection.execute(
+            """
+            SELECT
+                findings.id,
+                findings.finding_key,
+                findings.title,
+                findings.severity,
+                findings.owasp_category,
+                findings.status,
+                findings.created_at,
+                endpoints.method,
+                endpoints.path
+            FROM findings
+            LEFT JOIN endpoints
+                ON endpoints.id = findings.endpoint_id
+            ORDER BY findings.id DESC
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+
+    return render_template(
+        "workspace_page.html",
+        page_title="Security findings",
+        page_subtitle="Findings requiring analyst review",
+        section="findings",
+        findings=findings,
+    )
+
+
+@dashboard_bp.get("/owasp")
+def owasp_page():
+    connection = get_apiguard_connection()
+    try:
+        owasp = connection.execute(
+            """
+            SELECT
+                owasp_category,
+                COUNT(*) AS count
+            FROM findings
+            WHERE owasp_category IS NOT NULL
+            GROUP BY owasp_category
+            ORDER BY owasp_category
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+
+    return render_template(
+        "workspace_page.html",
+        page_title="OWASP API Security coverage",
+        page_subtitle="Findings mapped to the OWASP API Security Top 10",
+        section="owasp",
+        owasp=owasp,
+    )
+
+
+@dashboard_bp.get("/reports")
+def reports_page():
+    connection = get_apiguard_connection()
+    try:
+        scans = connection.execute(
+            """
+            SELECT
+                scans.id,
+                scans.status,
+                scans.started_at,
+                scans.completed_at,
+                scans.scanner_version,
+                targets.name AS target_name,
+                targets.environment
+            FROM scans
+            JOIN targets ON targets.id = scans.target_id
+            ORDER BY scans.id DESC
+            LIMIT 20
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+
+    return render_template(
+        "workspace_page.html",
+        page_title="Security reports",
+        page_subtitle="Assessment reporting and evidence review",
+        section="reports",
+        scans=scans,
+    )
+
+
+@dashboard_bp.get("/configuration")
+def configuration_page():
+    return render_template(
+        "workspace_page.html",
+        page_title="Scanner configuration",
+        page_subtitle="Current controlled-lab assessment configuration",
+        section="configuration",
+    )
+
+
+@dashboard_bp.get("/run-assessment")
+def run_assessment():
+    target = ScanTarget(
+        base_url="http://127.0.0.1:5000",
+        username="alice",
+        password="AliceLabPass!2026",
+        customer_id=101,
+    )
+
+    run_security_scan(target, order_id=1003)
+
+    return redirect("/")

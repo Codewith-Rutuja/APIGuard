@@ -74,6 +74,13 @@ def openapi_spec():
                         "tags": ["System"],
                     }
                 },
+                "/admin/users": {
+                    "get": {
+                        "summary": "List users",
+                        "tags": ["Administration"],
+                        "security": [{"bearerAuth": []}],
+                    }
+                },
             },
             "components": {
                 "securitySchemes": {

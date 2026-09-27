@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}  APIGuard</title>
+
+    <style>
+        :root {
+            --bg: #0A0915;
+            --surface: #181628;
+            --surface-2: #211E35;
+            --border: #302B48;
+            --orange: #FF6B35;
+            --orange-dark: #E65F2B;
+            --violet: #A78BFA;
+            --green: #10B981;
+            --red: #FF4D6D;
+            --text: #F5F3FA;
+            --muted: #A09AAF;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.16;
+            background-image:
+                linear-gradient(rgba(167,139,250,.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(167,139,250,.08) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        .topbar {
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 9, 21, .94);
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: var(--orange);
+            display: grid;
+            place-items: center;
+            color: #0A0915;
+            font-weight: 900;
+        }
+
+        .context {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 72px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar {
+            width: 224px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            background: rgba(24, 22, 40, .92);
+            padding: 22px 14px;
+        }
+
+        .nav-label {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.3px;
+            padding: 8px 12px;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 12px;
+            margin: 3px 0;
+            border-radius: 9px;
+            color: #D8D3E5;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: rgba(255,107,53,.12);
+            color: var(--orange);
+            border-left: 3px solid var(--orange);
+            padding-left: 9px;
+        }
+
+        .main {
+            flex: 1;
+            padding: 38px;
+            max-width: 1500px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 26px;
+            color: var(--violet);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back:hover {
+            color: var(--orange);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 30px;
+            letter-spacing: -.6px;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .panel {
+            margin-top: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 15px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .finding-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .finding-link:hover .finding-name {
+            color: var(--orange);
+        }
+
+        .finding-id {
+            color: var(--violet);
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .finding-name {
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .method {
+            display: inline-block;
+            margin-right: 8px;
+            color: var(--orange);
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .severity {
+            font-weight: 700;
+        }
+
+        .critical,
+        .high {
+            color: var(--red);
+        }
+
+        .medium {
+            color: var(--orange);
+        }
+
+        .low {
+            color: var(--green);
+        }
+
+        .status {
+            color: var(--green);
+        }
+
+        .coverage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 14px;
+            padding: 22px;
+        }
+
+        .coverage-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            padding: 18px;
+        }
+
+        .coverage-id {
+            color: var(--violet);
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .coverage-count {
+            margin-top: 10px;
+            font-size: 25px;
+            font-weight: 700;
+        }
+
+        .coverage-label {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .empty {
+            padding: 28px 22px;
+            color: var(--muted);
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            padding: 22px;
+        }
+
+        .config-card {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: var(--surface-2);
+        }
+
+        .config-label {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+        }
+
+        .config-value {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .scan-status {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        @media (max-width: 800px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                padding: 24px 16px;
+            }
+
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .context {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <div class="brand-mark">A</div>
+        <span>APIGuard</span>
+    </div>
+    <div class="context">API Security Assessment Platform</div>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <div class="nav-label">Workspace</div>
+
+        <a class="nav-item {% if section == 'overview' %}active{% endif %}" href="/">
+            Overview
+        </a>
+
+        <a class="nav-item {% if section == 'findings' %}active{% endif %}" href="/findings">
+            Findings
+        </a>
+
+        <a class="nav-item {% if section == 'owasp' %}active{% endif %}" href="/owasp">
+            OWASP coverage
+        </a>
+
+        <a class="nav-item {% if section == 'reports' %}active{% endif %}" href="/reports">
+            Reports
+        </a>
+
+        <a class="nav-item {% if section == 'configuration' %}active{% endif %}" href="/configuration">
+            Configuration
+        </a>
+
+        <a class="nav-item" href="/run-assessment">
+            Run assessment
+        </a>
+
+    </aside>
+
+    <main class="main">
+
+        <a class="back" href="/"> Back to overview</a>
+
+        <h1>{{ page_title }}</h1>
+        <div class="subtitle">{{ page_subtitle }}</div>
+
+        {% if section == "findings" %}
+
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Security findings</div>
+            </div>
+
+            {% if findings %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Finding</th>
+                        <th>Severity</th>
+                        <th>OWASP</th>
+                        <th>Endpoint</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for finding in findings %}
+                    <tr>
+                        <td>
+                            <a class="finding-link" href="/findings/{{ finding.id }}">
+                                <div class="finding-id">{{ finding.finding_key }}</div>
+                                <div class="finding-name">{{ finding.title }}</div>
+                            </a>
+                        </td>
+
+                        <td>
+                            <span class="severity {{ finding.severity|lower }}">
+                                {{ finding.severity }}
+                            </span>
+                        </td>
+
+                        <td>{{ finding.owasp_category or "" }}</td>
+
+                        <td>
+                            <span class="method">{{ finding.method or "" }}</span>
+                            {{ finding.path or "" }}
+                        </td>
+
+                        <td>
+                            <span class="status">{{ finding.status }}</span>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <div class="empty">No security findings recorded yet.</div>
+            {% endif %}
+        </section>
+
+        {% elif section == "owasp" %}
+
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">OWASP API Security Top 10</div>
+            </div>
+
+            {% if owasp %}
+            <div class="coverage-grid">
+                {% for item in owasp %}
+                <div class="coverage-card">
+                    <div class="coverage-id">{{ item.owasp_category }}</div>
+                    <div class="coverage-count">{{ item.count }}</div>
+                    <div class="coverage-label">Recorded finding(s)</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <div class="empty">No OWASP-mapped findings recorded yet.</div>
+            {% endif %}
+        </section>
+
+        {% elif section == "reports" %}
+
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Assessment history</div>
+            </div>
+
+            {% if scans %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scan</th>
+                        <th>Target</th>
+                        <th>Environment</th>
+                        <th>Status</th>
+                        <th>Scanner</th>
+                        <th>Started</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for scan in scans %}
+                    <tr>
+                        <td>#{{ scan.id }}</td>
+                        <td>{{ scan.target_name }}</td>
+                        <td>{{ scan.environment }}</td>
+                        <td>
+                            <span class="scan-status">
+                                {{ scan.status }}
+                            </span>
+                        </td>
+                        <td>{{ scan.scanner_version }}</td>
+                        <td>{{ scan.started_at }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <div class="empty">No assessments have been recorded yet.</div>
+            {% endif %}
+        </section>
+
+        {% elif section == "configuration" %}
+
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Controlled lab configuration</div>
+            </div>
+
+            <div class="config-grid">
+
+                <div class="config-card">
+                    <div class="config-label">Target</div>
+                    <div class="config-value">AcmeCloud API</div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-label">Environment</div>
+                    <div class="config-value">Controlled Security Lab</div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-label">Scanner</div>
+                    <div class="config-value">APIGuard 0.1.0</div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-label">Authentication</div>
+                    <div class="config-value">JWT Bearer Authentication</div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-label">Base URL</div>
+                    <div class="config-value">127.0.0.1:5000</div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-label">Testing scope</div>
+                    <div class="config-value">API Security Assessment</div>
+                </div>
+
+            </div>
+        </section>
+
+        {% endif %}
+
+    </main>
+
+</div>
+
+</body>
+</html>

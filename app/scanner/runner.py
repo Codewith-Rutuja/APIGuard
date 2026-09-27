@@ -7,6 +7,9 @@ from ..database.evidence import save_evidence
 from ..database.scans import update_scan_status
 from ..utils import utc_now
 from .authentication import AuthenticationCheck
+from .function_authorization import FunctionAuthorizationCheck
+from .business_flow import BusinessFlowCheck
+from .ssrf import SSRFCheck
 from .misconfiguration import SecurityMisconfigurationCheck
 from .property_authorization import PropertyAuthorizationCheck
 from .resource_consumption import ResourceConsumptionCheck
@@ -208,19 +211,10 @@ def run_security_scan(target: ScanTarget, order_id: int):
 
         property_finding = property_check.run(context)
 
-        profile_endpoint_id = get_or_create_endpoint(
-            scan_id=scan_id,
-            method="GET",
-            path="/profile",
-            source="openapi",
-            authenticated=True,
-        )
-
         if property_finding is not None:
             finding_id = save_finding(
                 scan_id,
                 property_finding,
-                endpoint_id=profile_endpoint_id,
             )
             save_evidence(
                 finding_id,
@@ -231,7 +225,76 @@ def run_security_scan(target: ScanTarget, order_id: int):
             )
 
         # ---------------------------------------------------------
-        # Phase 8: unrestricted resource consumption detection
+        # Phase 8: broken function level authorization detection
+        # ---------------------------------------------------------
+        function_check = FunctionAuthorizationCheck()
+
+        function_finding = function_check.run(context)
+
+        if function_finding is not None:
+            admin_endpoint_id = get_or_create_endpoint(
+                scan_id=scan_id,
+                method=function_finding.method,
+                path="/admin/users",
+                source="openapi",
+                authenticated=True,
+            )
+
+            finding_id = save_finding(
+                scan_id,
+                function_finding,
+                endpoint_id=admin_endpoint_id,
+            )
+            save_evidence(
+                finding_id,
+                request_data=f"{function_finding.method} {function_finding.endpoint}",
+                response_data=function_finding.evidence,
+                expected_behavior="Administrative functions should require the appropriate server-side role.",
+                observed_behavior=function_finding.evidence,
+            )
+
+        # ---------------------------------------------------------
+        # Phase 9: sensitive business flow protection detection
+        # ---------------------------------------------------------
+        business_flow_check = BusinessFlowCheck()
+
+        business_flow_finding = business_flow_check.run(context)
+
+        if business_flow_finding is not None:
+            finding_id = save_finding(
+                scan_id,
+                business_flow_finding,
+            )
+            save_evidence(
+                finding_id,
+                request_data=f"{business_flow_finding.method} {business_flow_finding.endpoint}",
+                response_data=business_flow_finding.evidence,
+                expected_behavior="Sensitive business workflows should enforce server-side business rules and authorization.",
+                observed_behavior=business_flow_finding.evidence,
+            )
+
+        # ---------------------------------------------------------
+        # Phase 10: SSRF detection
+        # ---------------------------------------------------------
+        ssrf_check = SSRFCheck()
+
+        ssrf_finding = ssrf_check.run(context)
+
+        if ssrf_finding is not None:
+            finding_id = save_finding(
+                scan_id,
+                ssrf_finding,
+            )
+            save_evidence(
+                finding_id,
+                request_data=f"{ssrf_finding.method} {ssrf_finding.endpoint}",
+                response_data=ssrf_finding.evidence,
+                expected_behavior="The API should validate and restrict server-side outbound destinations.",
+                observed_behavior=ssrf_finding.evidence,
+            )
+
+        # ---------------------------------------------------------
+        # Phase 11: unrestricted resource consumption detection
         # ---------------------------------------------------------
         resource_check = ResourceConsumptionCheck(
             test_limit=100000,
@@ -262,7 +325,7 @@ def run_security_scan(target: ScanTarget, order_id: int):
             )
 
         # ---------------------------------------------------------
-        # Phase 8: security misconfiguration detection
+        # Phase 10: security misconfiguration detection
         # ---------------------------------------------------------
         misconfiguration_check = SecurityMisconfigurationCheck(
             path="/api/v1/health",
@@ -293,7 +356,7 @@ def run_security_scan(target: ScanTarget, order_id: int):
             )
 
         # ---------------------------------------------------------
-        # Phase 9: active API surface discovery and inventory validation
+        # Phase 11: active API surface discovery and inventory validation
         # ---------------------------------------------------------
         observed_endpoints = discover_observed_surface(
             client
@@ -333,7 +396,7 @@ def run_security_scan(target: ScanTarget, order_id: int):
             )
 
         # ---------------------------------------------------------
-        # Phase 9: complete scan
+        # Phase 12: complete scan
         # ---------------------------------------------------------
         update_scan_status(
             scan_id,
@@ -351,6 +414,15 @@ def run_security_scan(target: ScanTarget, order_id: int):
 
         if property_finding is not None:
             findings.append(property_finding)
+
+        if function_finding is not None:
+            findings.append(function_finding)
+
+        if business_flow_finding is not None:
+            findings.append(business_flow_finding)
+
+        if ssrf_finding is not None:
+            findings.append(ssrf_finding)
 
         if resource_finding is not None:
             findings.append(resource_finding)

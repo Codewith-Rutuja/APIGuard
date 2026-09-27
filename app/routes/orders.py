@@ -119,3 +119,41 @@ def list_orders():
             ],
         }
     )
+
+
+@orders_bp.post("/orders/<int:order_id>/cancel")
+@require_authentication
+def cancel_order(order_id):
+    connection = get_acmecloud_connection()
+
+    try:
+        order = connection.execute(
+            """
+            SELECT id, status
+            FROM orders
+            WHERE id = ?
+            """,
+            (order_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+
+    if not order:
+        return jsonify(
+            {
+                "error": "order_not_found",
+                "message": "The requested order does not exist.",
+            }
+        ), 404
+
+    # Controlled API6 lab behavior:
+    # The endpoint does not enforce a business-state restriction
+    # before allowing the cancellation workflow.
+    return jsonify(
+        {
+            "message": "Order cancellation accepted.",
+            "order_id": order_id,
+            "previous_status": order["status"],
+            "new_status": "cancelled",
+        }
+    ), 200
